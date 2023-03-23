@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "233702499310",
+    "project_id": "motivator-e5bab",
+    "storage_bucket": "motivator-e5bab.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:233702499310:android:c95068bb138828057a64ff",
+        "android_client_info": {
+          "package_name": "com.example.motivator"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "233702499310-20e6s7lmpkgmol1foj14v4js4of6umml.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCyHTxxpbfjlUoSHhTSaBgi2uqGReBYx1U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "233702499310-20e6s7lmpkgmol1foj14v4js4of6umml.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "233702499310-hgj7nut9teuc7tc510a0idmo5bm87t02.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.vprihogenko.motivator",
+                "app_store_id": "6446422302"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
