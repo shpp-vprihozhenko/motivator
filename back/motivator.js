@@ -7,7 +7,12 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-//addQuotes();
+if (process.argv[2] == 'addQuotes') {
+  addQuotes();
+  return;
+}
+
+let arQuotes = [];
 
 sendQuoteToUsers();
 
@@ -15,7 +20,9 @@ async function sendQuoteToUsers(){
   let now = new Date();
   let nowHM = now.getHours()*60 + now.getMinutes();
   console.log('sendQuoteToUsers now', now, 'nowHM', nowHM);
-  let arQuotes = await getQuotes();
+  if (arQuotes.length == 0) {
+    await getQuotes();
+  }
   let quote = arQuotes[Math.floor(Math.random() * arQuotes.length)];
   console.log('got quote to send', quote);
   fbSnapshot = await db.collection('users').where("isPushesWanted", '==', true).get();
@@ -37,6 +44,7 @@ async function sendQuoteToUsers(){
 }
 
 async function getQuotes(){
+  console.log('getting quotes', (new Date()));
   let arRes = [];
   fbSnapshot = await db.collection('quotes').get();
   fbSnapshot.forEach((doc) => {
@@ -45,12 +53,16 @@ async function getQuotes(){
       arRes.push(data);
   });  
   console.log('got quotes from fb:', arRes.length);
-  return arRes;
+  if (arRes.length > 0) {
+    arQuotes = arRes;
+    console.log('fill arQuotes');
+  }
+  setTimeout(getQuotes, 24*60*60*1000);
 }
 
 async function addQuotes(){
   console.log('addQuotes');
-  let quotes = ''+fs.readFileSync('quotes_for_motivator.txt');
+  let quotes = ''+fs.readFileSync('dale2.txt');
   let delim = RegExp("\" [—–―-]", "i"); //— – ―
   let arQuotes = quotes.split('\n');
   console.log('got length', arQuotes.length);
@@ -67,6 +79,7 @@ async function addQuotes(){
     }
 
     await db.collection('quotes').add({author, quote: body});
+    console.log('author', author, 'body', body);
   }
   console.log('finish addQuotes');
 }

@@ -11,6 +11,8 @@ likes + block 2 likes from one user
   like/dislike (firebase) - block (locally), if not used - release, on press - block
 scheduled send quote
 catch notification, show quote fully
+// todo
+about
 link to author + db
 send me your quote!
  */
@@ -28,6 +30,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'about.dart';
 import 'firebase_options.dart';
 import 'package:flutter/services.dart' show DeviceOrientation, SystemChrome, rootBundle;
 import 'package:vibration/vibration.dart';
@@ -151,6 +154,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
   var incomingQuote = '';
 
+  bool isSwiping = false;
+
   @override
   void initState() {
     super.initState();
@@ -175,7 +180,18 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     AppBar ab = AppBar(
-      title: const Text('Motivator'),
+      title: Row(
+        children: [
+          const Text('Motivator+'),
+          Spacer(),
+          GestureDetector(
+            onTap: (){
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const About()));
+            },
+            child: Icon(Icons.help, size: 32, color: Colors.white,)
+          )
+        ],
+      ),
     );
     if (fieldSize.height != MediaQuery.of(context).size.height) {
       topPadding = MediaQuery.of(context).padding.top + ab.preferredSize.height;
@@ -200,186 +216,221 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
             ...starsWL(),
             Positioned(
               left: 0, top: 0,
-              child: Container(
-                width: fieldSize.width,
-                height: fieldSize.height-topPadding-90,
-                color: Colors.deepPurple.withOpacity(0.2),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      Expanded(
-                        child: Center(
-                          child: Transform.scale(
-                            scale: quoteAnimation.value == 0? 1 : quoteAnimation.value/maxPi,
-                            child: Transform.rotate(
-                              angle: quoteAnimation.value,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: const BorderRadius.all(Radius.circular(24)),
-                                      color: Colors.limeAccent.withOpacity(0.6),
-                                    ),
-                                    padding: const EdgeInsets.all(16),
-                                    child: Text(curQuote.text,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: quoteFontSize,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black,
+              child: GestureDetector(
+                onPanUpdate: (d){
+                  if (isSwiping) {
+                    return;
+                  }
+                  if (d.delta.dx < -15) {
+                    _nextQuote();
+                    isSwiping = true;
+                    Future.delayed(Duration(seconds: 1), (){ isSwiping = false; });
+                  } else if (d.delta.dx > 15) {
+                    _prevQuote();
+                    isSwiping = true;
+                    Future.delayed(Duration(seconds: 1), (){ isSwiping = false; });
+                  }
+                },
+                child: Container(
+                  width: fieldSize.width,
+                  height: fieldSize.height-topPadding-MediaQuery.of(context).padding.bottom,
+                  color: Colors.deepPurple.withOpacity(0.2),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Expanded(
+                          child: Center(
+                            child: Transform.scale(
+                              scale: quoteAnimation.value == 0? 1 : quoteAnimation.value/maxPi,
+                              child: Transform.rotate(
+                                angle: quoteAnimation.value,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: const BorderRadius.all(Radius.circular(24)),
+                                        color: Colors.limeAccent.withOpacity(0.6),
+                                      ),
+                                      padding: const EdgeInsets.all(16),
+                                      child: Text(curQuote.text,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: quoteFontSize,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 24,),
-                                  Row(
-                                    children: [
-                                      const Expanded(flex: 1, child: SizedBox(),),
-                                      Expanded(
-                                        flex: 2,
-                                        child: Container(
-                                          margin: const EdgeInsets.all(8),
-                                          decoration: const BoxDecoration(
-                                            color: Colors.greenAccent,
-                                            borderRadius: BorderRadius.all(Radius.circular(24)),
-                                          ),
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Text(curQuote.author,
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                                fontSize: quoteFontSize*0.7,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.blue,
+                                    const SizedBox(height: 24,),
+                                    Row(
+                                      children: [
+                                        const Expanded(flex: 1, child: SizedBox(),),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Container(
+                                            margin: const EdgeInsets.all(8),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.greenAccent,
+                                              borderRadius: BorderRadius.all(Radius.circular(24)),
+                                            ),
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(curQuote.author,
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                  fontSize: quoteFontSize*0.7,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.blue,
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                                      ],
+                                    ),
+                                    isFbConnected?
+                                      SizedBox(
+                                        width: fieldSize.width,
+                                        child: Container(
+                                          margin: EdgeInsets.only(top: 16),
+                                          padding: const EdgeInsets.only(left: 12, right: 12),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.max,
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              GestureDetector(
+                                                onTap: (){
+                                                  _markCurQuote(-1);
+                                                },
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    const Icon(Icons.thumb_down, color: Colors.white, size: 32,),
+                                                    const SizedBox(height: 8,),
+                                                    Text(curQuote.dislikes.toString(),
+                                                      style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 16
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              GestureDetector(
+                                                onTap: (){
+                                                  _markCurQuote(1);
+                                                },
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    const Icon(Icons.thumb_up, color: Colors.white, size: 32,),
+                                                    const SizedBox(height: 8,),
+                                                    Text(curQuote.likes.toString(),
+                                                      style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 16
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      )
+                                    :
+                                      const SizedBox()
+                                    ,
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        )
-                      ),
-                    ],
+                          )
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-            isFbConnected?
-              Positioned(
-              left: 0,
-              bottom: 90,
-              child: SizedBox(
-                width: fieldSize.width,
-                child: Container(
-                  padding: const EdgeInsets.only(left: 12, right: 12),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      GestureDetector(
-                        onTap: (){
-                          _markCurQuote(-1);
-                        },
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.thumb_down, color: Colors.white, size: 32,),
-                            const SizedBox(height: 8,),
-                            Text(curQuote.dislikes.toString(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: (){
-                          _markCurQuote(1);
-                        },
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.thumb_up, color: Colors.white, size: 32,),
-                            const SizedBox(height: 8,),
-                            Text(curQuote.likes.toString(),
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            )
-            :
-              const SizedBox()
-            ,
           ],
         ),
-        floatingActionButton: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        bottomNavigationBar: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Container(
-              margin: const EdgeInsets.only(left: 24),
-              child: Opacity(
-                opacity: 0.5,
-                child: FloatingActionButton(
-                  onPressed: _prevQuote,
-                  child: const Icon(Icons.arrow_back_ios),
-                ),
-              ),
-            ),
             GestureDetector(
               onTap: _sendToSomebody,
               child: Opacity(
                 opacity: 0.5,
                 child: Container(
-                  width: 54, height: 54,
-                  decoration: const BoxDecoration(
-                    color: Colors.blueAccent,
-                    borderRadius: BorderRadius.all(Radius.circular(27)),
-                  ),
-                  child: const Center(child: Icon(Icons.share, size: 32, color: Colors.white,))
+                    margin: EdgeInsets.only(left: 34),
+                    width: 54, height: 54,
+                    decoration: const BoxDecoration(
+                      color: Colors.blueAccent,
+                      borderRadius: BorderRadius.all(Radius.circular(27)),
+                    ),
+                    child: const Center(child: Icon(Icons.share, size: 32, color: Colors.white,))
                 ),
               ),
             ),
             isUpdating?
-              const CircularProgressIndicator()
-            :
-              GestureDetector(
-                onTap: _selectTime,
-                child: Opacity(
-                  opacity: 0.5,
-                  child: Container(
+            const CircularProgressIndicator()
+                :
+            GestureDetector(
+              onTap: _selectTime,
+              child: Opacity(
+                opacity: 0.5,
+                child: Container(
                     width: 54, height: 54,
                     decoration: const BoxDecoration(
                       color: Colors.blueAccent,
                       borderRadius: BorderRadius.all(Radius.circular(27)),
                     ),
                     child: const Center(child: Icon(Icons.notifications, size: 32, color: Colors.white,))
-                  ),
                 ),
-              )
-            ,
-            Opacity(
-              opacity: 0.5,
-              child: FloatingActionButton(
-                onPressed: _nextQuote,
-                child: const Icon(Icons.arrow_forward_ios),
               ),
-            ),
+            )
+            ,
           ],
         ),
+        // floatingActionButton: Row(
+        //   mainAxisAlignment: MainAxisAlignment.spaceAround,
+        //   children: [
+        //     GestureDetector(
+        //       onTap: _sendToSomebody,
+        //       child: Opacity(
+        //         opacity: 0.5,
+        //         child: Container(
+        //           margin: EdgeInsets.only(left: 34),
+        //           width: 54, height: 54,
+        //           decoration: const BoxDecoration(
+        //             color: Colors.blueAccent,
+        //             borderRadius: BorderRadius.all(Radius.circular(27)),
+        //           ),
+        //           child: const Center(child: Icon(Icons.share, size: 32, color: Colors.white,))
+        //         ),
+        //       ),
+        //     ),
+        //     isUpdating?
+        //       const CircularProgressIndicator()
+        //     :
+        //       GestureDetector(
+        //         onTap: _selectTime,
+        //         child: Opacity(
+        //           opacity: 0.5,
+        //           child: Container(
+        //             width: 54, height: 54,
+        //             decoration: const BoxDecoration(
+        //               color: Colors.blueAccent,
+        //               borderRadius: BorderRadius.all(Radius.circular(27)),
+        //             ),
+        //             child: const Center(child: Icon(Icons.notifications, size: 32, color: Colors.white,))
+        //           ),
+        //         ),
+        //       )
+        //     ,
+        //   ],
+        // ),
       ),
     );
   }
@@ -744,7 +795,6 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
   _selectTime() async {
     DateTime time = timeTo;
-    String header = 'Select wanted push-up time';
     Size size = MediaQuery.of(context).size;
     var result = await showDialog(
         context: context,
@@ -782,7 +832,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                             const SizedBox(height: 16,),
                             Row(
                               children: [
-                                Text(header,
+                                Text('Select wanted push-up time',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w600,
                                       fontSize: 18,

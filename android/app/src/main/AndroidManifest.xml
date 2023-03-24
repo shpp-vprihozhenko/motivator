@@ -1,10 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.motivator">
+    package="com.vprihogenko.motivator">
 
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
-        android:label="motivator"
+        android:label="Motivator+"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity
