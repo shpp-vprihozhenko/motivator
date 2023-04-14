@@ -156,6 +156,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
   bool isSwiping = false;
 
+  bool isPushNotificationWanted = false;
+
   @override
   void initState() {
     super.initState();
@@ -169,6 +171,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     _initTTS();
     _setupInteractedMessage();
     _initSharedPrefsAndFcm();
+    Future.delayed(Duration(seconds: 20), _askForNotifications);
   }
 
   @override
@@ -182,7 +185,14 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     AppBar ab = AppBar(
       title: Row(
         children: [
-          const Text('Motivator+'),
+          GestureDetector(
+            onTap: (){
+              if (kDebugMode) {
+                _askForNotifications();
+              }
+            },
+            child: const Text('Motivator+')
+          ),
           Spacer(),
           GestureDetector(
             onTap: (){
@@ -254,7 +264,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                         color: Colors.limeAccent.withOpacity(0.6),
                                       ),
                                       padding: const EdgeInsets.all(16),
-                                      child: Text(curQuote.text,
+                                      child: Text(curQuote.text.replaceAll('"', ''),
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           fontSize: quoteFontSize,
@@ -984,12 +994,63 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     printD('got doc $doc');
     var data = doc.data();
     printD('got data $data');
+    isPushNotificationWanted = data!["isPushesWanted"] ?? false;
+    printD('isPushNotificationWanted $isPushNotificationWanted');
     Timestamp dt = data!["dt"];
     printD('got dt $dt');
     timeTo = DateTime.fromMillisecondsSinceEpoch(dt.millisecondsSinceEpoch);
     printD('got timeTo $timeTo');
   }
 
+  FutureOr _askForNotifications() async {
+    if (isPushNotificationWanted) {
+      return;
+    }
+    var result = await showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            actionsPadding: EdgeInsets.only(bottom: 22),
+            icon: Icon(Icons.help, color: Colors.lightGreen, size: 34,),
+            content: Text('Do you want to receive daily quotes?', textAlign: TextAlign.center,),
+            actions: [
+              GestureDetector(
+                onTap: (){
+                  Navigator.pop(context, 'yes');
+                },
+                child: Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.lightGreen[200],
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
+                  child: Text('yes', textScaleFactor: 1.3,)
+                ),
+              ),
+              SizedBox(width: 60,),
+              GestureDetector(
+                onTap: (){
+                  Navigator.pop(context);
+                },
+                child: Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                    ),
+                    child: Text('no', textScaleFactor: 1.3,)
+                ),
+              ),
+            ],
+            actionsAlignment: MainAxisAlignment.center,
+          );
+        }
+    );
+    if (result == null) {
+      return;
+    }
+    _selectTime();
+  }
 }
 
 showAlertPage(context, String msg) async {
