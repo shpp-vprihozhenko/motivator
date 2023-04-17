@@ -37,6 +37,7 @@ import 'package:vibration/vibration.dart';
 import 'package:share_extend/share_extend.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -447,6 +448,21 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
   void _getFbData() async {
     printD('_getFbData');
+
+    try {
+      final userCredential = await FirebaseAuth.instance.signInAnonymously();
+      print("Signed in with temporary account.");
+    } on FirebaseAuthException catch (e) {
+      printD('FirebaseAuthException $e');
+      switch (e.code) {
+        case "operation-not-allowed":
+          print("Anonymous auth hasn't been enabled for this project.");
+          break;
+        default:
+          print("Unknown error.");
+      }
+    }
+
     try {
       await db.collection("quotes").get().then((event) {
         if (event.docs.isNotEmpty) {
