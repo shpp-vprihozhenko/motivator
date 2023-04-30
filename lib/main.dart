@@ -159,6 +159,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
   bool isPushNotificationWanted = false;
 
+  int assetsQuotesLength = 0;
+
   @override
   void initState() {
     super.initState();
@@ -187,10 +189,15 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       title: Row(
         children: [
           GestureDetector(
-            onTap: (){
-              if (kDebugMode) {
-                _askForNotifications();
+            onTap: () async {
+              DateTime now = DateTime.now();
+              DateTime lastTestDate = DateTime(2023, 05, 30);
+              if (now.isAfter(lastTestDate)) {
+                printD('testing period is finished');
+                return;
               }
+              await _getFbData();
+              showAlertPage(context, 'got ${quotes.length} from FB, assets $assetsQuotesLength}');
             },
             child: const Text('Motivator+')
           ),
@@ -446,9 +453,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
-  void _getFbData() async {
-    printD('_getFbData');
-
+  _anonymousFbLogin() async {
+    printD('_anonymousFbLogin');
     try {
       final userCredential = await FirebaseAuth.instance.signInAnonymously();
       print("Signed in with temporary account.");
@@ -462,7 +468,10 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           print("Unknown error.");
       }
     }
+  }
 
+  _getFbData() async {
+    printD('_getFbData');
     try {
       await db.collection("quotes").get().then((event) {
         if (event.docs.isNotEmpty) {
@@ -516,9 +525,11 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       quote.text = splitted[0].trim().replaceAll('"', '');
       quotes.add(quote);
     }
-    printD('got quotes $quotes');
+    printD('got quotes from assets ${quotes.length}');
+    assetsQuotesLength = quotes.length;
     curIdx = rng.nextInt(quotes.length);
     curQuote = quotes[curIdx];
+    await _anonymousFbLogin();
     _getFbData();
   }
 
